@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Smart City Disease Risk AI</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav>
+    <h2>Smart City Health AI</h2>
+
+    <div class="menu">
+        <a href="/">Home</a>
+        <a href="/dashboard">Analytics</a>
+        <a href="/history">History</a>
+        <a href="/chat">Health Chatbot</a>
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<!-- DASHBOARD CARDS -->
+<div class="dashboard">
+
+    <div class="card">
+        <h3>Temperature</h3>
+        <p>Real-time weather data</p>
+    </div>
+
+    <div class="card">
+        <h3>Humidity</h3>
+        <p>Moisture level tracking</p>
+    </div>
+
+    <div class="card">
+        <h3>AQI</h3>
+        <p>Air quality monitoring</p>
+    </div>
+
+    <div class="card">
+        <h3>Population</h3>
+        <p>Urban density analysis</p>
+    </div>
+
+</div>
+
+<!-- PREDICTION FORM -->
+<div class="form-container">
+
+    <h2>General Disease Prediction</h2>
+
+    <form action="/predict" method="POST">
+
+        <!-- ✅ CITY INPUT (API BASED) -->
+        <input type="text" name="city" placeholder="Enter City" required>
+
+        <!-- USER INPUT
+        <input type="number" name="rain" placeholder="Rainfall (mm)" required>
+        <input type="number" name="pop" placeholder="Population Density" required>-->
+
+        <button type="submit">Predict</button>
+
+    </form>
+
+    <!-- CATEGORY BUTTONS -->
+    <div class="category-buttons">
+
+        <a href="/predict/skin"><button>Skin Disease</button></a>
+        <a href="/predict/water"><button>Water-Borne</button></a>
+        <a href="/predict/air"><button>Air-Borne</button></a>
+        <a href="/predict/insect"><button>Insect-Borne</button></a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Insect-Borne Disease Prediction</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="form-container">
+
+<h2>Insect-Borne Disease Prediction</h2>
+
+<form action="/predict/insect" method="POST">
+
+<input type="text" name="city" placeholder="Enter City" required>
+
+<button type="submit">Predict</button>
+
+</form>
+
+<a href="/">⬅ Back</a>
+
+</div>
+
+</body>
+</html>

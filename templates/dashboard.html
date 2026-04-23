@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Analytics Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<nav>
+
+<h2>Smart City Health AI</h2>
+
+<div class="menu">
+
+<a href="/">Home</a>
+<a href="/dashboard">Analytics</a>
+<a href="/history">History</a>
+<a href="/logout">Logout</a>
+
+</div>
+
+</nav>
+
+
+<div class="analytics-container">
+
+<h2>Disease Risk Analytics</h2>
+
+<canvas id="riskChart"></canvas>
+
+</div>
+
+
+<script>
+
+const labels = {{ labels | tojson }};
+const values = {{ values | tojson }};
+
+const colors = labels.map(label => {
+if(label === "Low") return "green";
+if(label === "Medium") return "orange";
+if(label === "High") return "red";
+});
+
+const ctx = document.getElementById('riskChart');
+
+new Chart(ctx, {
+
+type: 'pie',
+
+data: {
+
+labels: labels,
+
+datasets: [{
+
+label: 'Risk Distribution',
+
+data: values,
+
+backgroundColor: colors
+
+}]
+
+}
+
+});
+
+</script>
+
+</body>
+
+</html>

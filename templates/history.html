@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Prediction History</title>
+
+</head>
+
+<body>
+
+<h2>Previous Predictions</h2>
+
+<table border="1">
+
+<tr>
+<th>Temperature</th>
+<th>Humidity</th>
+<th>AQI</th>
+<th>Rainfall</th>
+<th>Population</th>
+<th>Risk</th>
+</tr>
+
+{% for row in rows %}
+
+<tr>
+<td>{{row[0]}}</td>
+<td>{{row[1]}}</td>
+<td>{{row[2]}}</td>
+<td>{{row[3]}}</td>
+<td>{{row[4]}}</td>
+<td>{{row[5]}}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</body>
+
+</html>

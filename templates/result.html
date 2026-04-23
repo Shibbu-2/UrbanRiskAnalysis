@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Prediction Result</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<nav>
+<h2>Smart City Health AI</h2>
+
+<div class="menu">
+<a href="/">Home</a>
+<a href="/dashboard">Analytics</a>
+<a href="/history">History</a>
+<a href="/logout">Logout</a>
+</div>
+
+</nav>
+
+<div class="container">
+
+<h2>Prediction Result</h2>
+
+<!-- ✅ CATEGORY + RISK -->
+<h3>Category: {{category}}</h3>
+<h3>Risk Level: {{prediction}}</h3>
+
+<hr>
+
+<!-- ✅ ENVIRONMENT DATA -->
+<h3>Environmental Data</h3>
+
+<table>
+
+<tr>
+<th>City</th>
+<td>{{city}}</td>
+</tr>
+
+<tr>
+<th>Temperature</th>
+<td>{{temp}} °C</td>
+</tr>
+
+<tr>
+<th>Humidity</th>
+<td>{{humidity}} %</td>
+</tr>
+
+<tr>
+<th>AQI</th>
+<td>{{aqi}}</td>
+</tr>
+
+<tr>
+<th>Rainfall</th>
+<td>{{rain}}</td>
+</tr>
+
+<tr>
+<th>Population Density</th>
+<td>{{pop}}</td>
+</tr>
+
+</table>
+
+<br>
+
+<h3>Urban Risk Analysis</h3>
+<p><b>High Risk Area:</b> {{area}}</p>
+<p><b>Reason:</b> {{reason}}</p>
+
+<!-- ✅ PRECAUTIONS -->
+<h3>Suggested Precautions</h3>
+
+<ul>
+{% for tip in advice %}
+<li>{{ tip }}</li>
+{% endfor %}
+</ul>
+
+<!-- BUTTON -->
+<a href="/" class="back-btn">Predict Again</a>
+
+<hr>
+
+<!-- CHATBOT -->
+<div style="text-align:center; margin-top:20px;">
+    <p>Want more information? 🤖</p>
+    <a href="/chat">
+        <button>Ask Chatbot</button>
+    </a>
+</div>
+
+</div>
+
+</body>
+</html>

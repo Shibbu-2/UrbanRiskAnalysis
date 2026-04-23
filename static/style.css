@@ -1,0 +1,457 @@
+body{
+font-family:Arial, sans-serif;
+margin:0;
+background:#f4f6f9;
+}
+
+
+/* NAVBAR */
+
+nav{
+background:#2c3e50;
+color:white;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:10px 15px;
+}
+
+.menu a{
+color:white;
+text-decoration:none;
+margin-left:20px;
+font-size:16px;
+}
+
+.menu a:hover{
+color:#1abc9c;
+}
+
+
+/* DASHBOARD */
+
+.dashboard{
+
+display:flex;
+justify-content:center;
+gap:20px;
+margin-top:35px;
+
+}
+
+.card{
+
+width:180px;
+background:rgb(141, 153, 174);
+padding:10px;
+border-radius:10px;
+box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+text-align:center;
+
+}
+
+.card h3{
+margin:0;
+color:#2c3e50;
+}
+
+.card p{
+font-size:13px;
+color:black;
+}
+
+
+/* FORM CONTAINER */
+
+.container{
+
+width:380px;
+margin:20px auto;
+background:#edf2f4;
+padding:30px;
+border-radius:10px;
+box-shadow:0px 5px 15px rgba(0,0,0,0.2);
+text-align:center;
+
+}
+
+.container h3{
+margin-bottom:15px;
+}
+
+
+/* INPUT */
+
+input{
+
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:5px;
+border:1px solid #ccc;
+
+}
+
+
+/* BUTTON */
+
+button{
+
+width:100%;
+padding:10px;
+margin-top:15px;
+background:#1abc9c;
+border:none;
+color:white;
+font-size:16px;
+border-radius:5px;
+cursor:pointer;
+
+}
+
+button:hover{
+background:#16a085;
+}
+
+
+
+
+/* RESULT */
+
+.result{
+
+margin-top:20px;
+font-size:18px;
+font-weight:bold;
+color:#2c3e50;
+
+}
+
+/* LOGIN & SIGNUP PAGE */
+
+.auth-body{
+
+font-family:Arial;
+margin:0;
+
+display:flex;
+justify-content:center;
+align-items:center;
+
+height: 100vh;
+background:linear-gradient(135deg,#efeef0);
+
+}
+
+.auth-container{
+
+width:320px;
+padding: 40px;
+background:white;
+border-radius:12px;
+
+text-align:center;
+
+box-shadow:0px 8px 25px rgba(0,0,0,0.2);
+
+}
+
+.auth-container h2{
+
+margin-bottom:20px;
+
+color:#2c3e50;
+
+}
+
+.auth-container input{
+
+width:100%;
+
+padding:10px;
+
+margin-top:12px;
+
+border-radius:5px;
+
+border:1px solid #ccc;
+
+}
+
+.auth-container button{
+
+width:100%;
+
+padding:10px;
+
+margin-top:15px;
+
+background:#75b9f4;
+
+border:none;
+
+color:black;
+
+font-size:16px;
+
+border-radius:5px;
+
+cursor:pointer;
+
+}
+
+.auth-container button:hover{
+
+background:#0078ff;
+
+}
+
+.auth-link{
+
+display:block;
+
+margin-top:10px;
+
+color:#0078ff;
+
+text-decoration:none;
+
+}
+
+.auth-link:hover{
+
+text-decoration:underline;
+
+}
+/*result page*/
+table{
+
+width:100%;
+margin-top:20px;
+border-collapse:collapse;
+
+}
+
+table th, table td{
+
+padding:5px;
+border:1px solid #ccc;
+text-align:left;
+
+}
+
+.back-btn{
+
+display:inline-block;
+margin-top:10px;
+padding:10px 15px;
+background:#1abc9c;
+color:white;
+text-decoration:none;
+border-radius:5px;
+
+}
+
+.back-btn:hover{
+background:#16a085;
+}
+/* analytics */
+.analytics-container{
+
+width: 300px;
+
+margin:50px auto;
+
+background:white;
+
+padding:30px;
+
+border-radius:10px;
+
+box-shadow:0px 5px 15px rgba(0,0,0,0.2);
+
+text-align:center;
+
+}
+
+/* Chatbot Page */
+
+body{
+    background:#f5f7fb;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+.chat-container{
+
+    width:600px;
+    margin:60px auto;
+    background:rgb(195, 229, 248);
+    border-radius:10px;
+    box-shadow:0px 4px 15px rgba(0,0,0,0.1);
+    padding:20px;
+
+}
+
+.chat-container h2{
+
+    text-align:center;
+    margin-bottom:15px;
+    color:black;
+
+}
+
+#chatbox{
+
+    height:300px;
+    overflow-y:auto;
+    border:1px solid #eee;
+    border-radius:6px;
+    padding:15px;
+    margin-bottom:15px;
+    background:whitesmoke;
+
+}
+
+.user{
+
+    text-align:right;
+    margin:8px 0;
+    color:white;
+    background:#007bff;
+    padding:8px 12px;
+    border-radius:8px;
+    display:inline-block;
+    max-width:70%;
+
+}
+
+.bot{
+
+    text-align:left;
+    margin:8px 0;
+    color:black;
+    background:#efe9ed;
+    padding:8px 12px;
+    border-radius:8px;
+    display:inline-block;
+    max-width:70%;
+
+}
+
+.input-area{
+
+    display:flex;
+    gap:10px;
+
+}
+
+#userInput{
+
+    flex:5;
+    padding:12px;
+    font-size:15px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    width:100%;
+
+}
+
+button{
+
+    flex:1;
+    padding:10px;
+    background:#007bff;
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+
+}
+
+button:hover{
+
+    background:#0056b3;
+
+}
+
+ul{
+
+background:#f8f9fa;
+padding:25px;
+border-radius:8px;
+
+}
+
+li{
+
+margin:5px 0;
+
+}
+
+
+/* -------- PAGE BACKGROUND -------- */
+body{
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to right, #e3f2fd, #ffffff);
+    margin: 0;
+    padding: 0;
+}
+
+/* -------- CONTAINER -------- */
+.form-container{
+    width: 420px;
+    margin: 60px auto;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* -------- HEADING -------- */
+.form-container h2{
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* -------- INPUT FIELDS -------- */
+.form-container input{
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+/* -------- BUTTON -------- */
+.form-container button{
+    width: 100%;
+    padding: 10px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.form-container button:hover{
+    background: #0056b3;
+}
+
+/* -------- CATEGORY BUTTONS -------- */
+.category-buttons{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.category-buttons a button{
+    background: #28a745;
+}
+
+.category-buttons a button:hover{
+    background: #1e7e34;
+}
