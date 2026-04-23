@@ -9,7 +9,6 @@ def init_db():
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
-    # Create table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,18 +17,18 @@ def init_db():
     )
     """)
 
-    # Insert default user
-    cursor.execute("SELECT * FROM users WHERE username='admin'")
-    if not cursor.fetchone():
-        cursor.execute(
-            "INSERT INTO users(username, password) VALUES(?, ?)",
-            ("admin", "admin")
-        )
+    # CLEAR OLD USERS (temporary for fix)
+    cursor.execute("DELETE FROM users")
+
+    # INSERT FRESH USER
+    cursor.execute(
+        "INSERT INTO users(username, password) VALUES(?, ?)",
+        ("admin", "admin")
+    )
 
     conn.commit()
     conn.close()
 
-# Call this function
 init_db()
 
 def get_live_data(city):
