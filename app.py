@@ -2,13 +2,29 @@ from flask import Flask, render_template, request, redirect, session, jsonify
 import pickle
 import sqlite3
 import requests
+import os
+from dotenv import load_dotenv
 
-import sqlite3
+load_dotenv()
+
+API_KEY = os.getenv("API_KEY")
+
+if not API_KEY:
+    raise ValueError("API_KEY not found. Check your.env file")
+app = Flask(__name__)
+app.secret_key = "secret123"
+
+DB_NAME = "database.db"
+
+# ---------------- DATABASE ----------------
+def get_db():
+    return sqlite3.connect(DB_NAME)
 
 def init_db():
-    conn = sqlite3.connect("database.db")
+    conn = get_db()
     cursor = conn.cursor()
 
+    # Users table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -17,32 +33,49 @@ def init_db():
     )
     """)
 
-    # CLEAR OLD USERS (temporary for fix)
-    cursor.execute("DELETE FROM users")
-
-    # INSERT FRESH USER
-    cursor.execute(
-        "INSERT INTO users(username, password) VALUES(?, ?)",
-        ("admin", "admin")
+    # Predictions table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS predictions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        city TEXT,
+        temp REAL,
+        humidity REAL,
+        aqi REAL,
+        rain REAL,
+        pop REAL,
+        risk TEXT,
+        category TEXT
     )
+    """)
+
+    # Default user
+    cursor.execute("SELECT * FROM users WHERE username=?", ("admin",))
+    if not cursor.fetchone():
+        cursor.execute(
+            "INSERT INTO users(username, password) VALUES(?, ?)",
+            ("admin", "admin")
+        )
 
     conn.commit()
     conn.close()
 
 init_db()
 
+# ---------------- LOAD MODEL ----------------
+model = pickle.load(open("disease_model.pkl", "rb"))
+
+# ---------------- API ----------------
 def get_live_data(city):
 
-    API_KEY = "c4bde06fec07d889a99939c5ce835ff2"
-
-    # -------- WEATHER --------
     weather_url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
     weather_res = requests.get(weather_url).json()
+
+    if "main" not in weather_res:
+        return 0,0,0
 
     temp = weather_res["main"]["temp"]
     humidity = weather_res["main"]["humidity"]
 
-    # -------- AQI --------
     lat = weather_res["coord"]["lat"]
     lon = weather_res["coord"]["lon"]
 
@@ -53,103 +86,41 @@ def get_live_data(city):
 
     return temp, humidity, aqi
 
-app = Flask(__name__)
-app.secret_key = "secret123"
-
-# ---------------- LOAD MODEL ----------------
-model = pickle.load(open("disease_model.pkl", "rb"))
-
-# ---------------- DATABASE ----------------
-conn = sqlite3.connect("database.db", check_same_thread=False)
-cursor = conn.cursor()
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS users(
-id INTEGER PRIMARY KEY AUTOINCREMENT,
-username TEXT,
-password TEXT
-)
-""")
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS predictions(
-temp REAL,
-humidity REAL,
-aqi REAL,
-rain REAL,
-pop REAL,
-risk TEXT,
-category TEXT
-)
-""")
-
-conn.commit()
-
 # ---------------- PRECAUTIONS ----------------
 def get_precautions(risk):
     if risk == "High":
-        return [
-            "Use mosquito nets",
-            "Avoid stagnant water",
-            "Wear full sleeve clothes",
-            "Use mosquito repellent",
-            "Keep surroundings clean"
-        ]
+        return ["Avoid polluted areas", "Use protection", "Maintain hygiene"]
     elif risk == "Medium":
-        return [
-            "Keep environment clean",
-            "Avoid dirty water",
-            "Use mosquito protection"
-        ]
+        return ["Stay cautious", "Maintain cleanliness"]
     else:
-        return [
-            "Maintain hygiene",
-            "Drink clean water",
-            "Keep surroundings clean"
-        ]
+        return ["Maintain basic hygiene"]
 
-
+# ---------------- URBAN RISK ----------------
 def get_urban_risk(temp, humidity, aqi, rain, pop, category):
-
-    # -------- SKIN --------
     if category == "Skin Disease":
-        if humidity > 70 and temp > 30:
-            return "Slum Areas", "High humidity and heat cause skin infections"
-        elif aqi > 150:
-            return "Industrial Areas", "Pollution causes skin irritation"
-        else:
-            return "Residential Areas", "Moderate environmental conditions"
-
-    # -------- WATER --------
+        return ("Slum Areas", "High humidity causes infections") if humidity > 70 else ("Residential Areas", "Normal conditions")
     elif category == "Water-Borne Disease":
-        if rain > 100 and pop > 1000:
-            return "Flood-Prone Areas", "Heavy rain + dense population spreads contamination"
-        else:
-            return "Poor Sanitation Areas", "Unsafe water sources"
-
-    # -------- AIR --------
+        return ("Flood Areas", "Water contamination") if rain > 50 else ("Sanitation Areas", "Unsafe water")
     elif category == "Air-Borne Disease":
-        if aqi > 200:
-            return "Traffic Zones", "Very poor air quality causes respiratory diseases"
-        elif humidity > 80:
-            return "Damp Areas", "High humidity spreads airborne infections"
-        else:
-            return "Urban Areas", "Moderate air quality"
-
-    # -------- INSECT --------
+        return ("Traffic Zones", "High AQI") if aqi > 3 else ("Urban Areas", "Moderate AQI")
     elif category == "Insect-Borne Disease":
-        if rain > 80 and humidity > 60:
-            return "Stagnant Water Areas", "Mosquito breeding due to water accumulation"
-        else:
-            return "Green Areas", "Insects thrive in vegetation zones"
-
-    # -------- GENERAL --------
+        return ("Stagnant Water Areas", "Mosquito breeding") if rain > 20 else ("Green Areas", "Insects present")
     else:
-        if aqi > 150 and temp > 30:
-            return "Industrial + Dense Areas", "Heat and pollution increase disease risk"
-        else:
-            return "Mixed Urban Area", "General environmental risk"
-        
+        return ("Mixed Urban Area", "General risk")
+
+# ---------------- SAVE ----------------
+def save_prediction(city, temp, humidity, aqi, rain, pop, risk, category):
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO predictions (city, temp, humidity, aqi, rain, pop, risk, category)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (city, temp, humidity, aqi, rain, pop, risk, category))
+
+    conn.commit()
+    conn.close()
+
 # ---------------- HOME ----------------
 @app.route('/')
 def home():
@@ -158,14 +129,19 @@ def home():
     return render_template("index.html")
 
 # ---------------- LOGIN ----------------
-@app.route('/login', methods=['GET','POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        conn = get_db()
+        cursor = conn.cursor()
+
         username = request.form['username']
         password = request.form['password']
 
         cursor.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
         user = cursor.fetchone()
+
+        conn.close()
 
         if user:
             session['user'] = username
@@ -176,14 +152,18 @@ def login():
     return render_template("login.html")
 
 # ---------------- SIGNUP ----------------
-@app.route('/signup', methods=['GET','POST'])
+@app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
+        conn = get_db()
+        cursor = conn.cursor()
+
         username = request.form['username']
         password = request.form['password']
 
         cursor.execute("INSERT INTO users(username,password) VALUES(?,?)", (username, password))
         conn.commit()
+        conn.close()
 
         return redirect('/login')
 
@@ -195,172 +175,151 @@ def logout():
     session.pop('user', None)
     return redirect('/login')
 
-# ---------------- GENERAL PREDICTION ----------------
-@app.route('/predict', methods=['GET','POST'])
+# ---------------- GENERAL ----------------
+@app.route('/predict', methods=['POST'])
 def predict():
-    if request.method == 'POST':
-        city = request.form['city']
-        temp, humidity, aqi = get_live_data(city)
-        rain=0
-        pop=0
+    city = request.form['city']
+    temp, humidity, aqi = get_live_data(city)
 
-        prediction = model.predict([[temp, humidity, aqi, rain, pop]])
-        risk = prediction[0]
-        advice = get_precautions(risk)
+    rain, pop = 0, 0
 
-        area, reason = get_urban_risk(temp, humidity, aqi, rain, pop, "General Disease")
+    risk = model.predict([[temp, humidity, aqi, rain, pop]])[0]
+    advice = get_precautions(risk)
 
-        return render_template("result.html",
-                               city = city,
-                               temp=temp,
-                               humidity=humidity,
-                               aqi=aqi,
-                               rain=rain,
-                               pop=pop,
-                               prediction=risk,
-                               advice=advice,
-                               category="General Disease",
-                               area=area,
-                               reason=reason)
+    save_prediction(city, temp, humidity, aqi, rain, pop, risk, "General Disease")
 
-    return render_template("index.html")
+    area, reason = get_urban_risk(temp, humidity, aqi, rain, pop, "General Disease")
 
-# ---------------- SKIN ----------------
-@app.route('/predict/skin', methods=['GET','POST'])
+    return render_template("result.html", city=city, temp=temp, humidity=humidity,
+                           aqi=aqi, rain=rain, pop=pop, prediction=risk,
+                           advice=advice, category="General Disease",
+                           area=area, reason=reason)
+
+@app.route('/predict/skin', methods=['POST'])
 def predict_skin():
-    if request.method == 'POST':
-        city = request.form['city']
-        temp, humidity, aqi = get_live_data(city)
+    city = request.form['city']
+    temp, humidity, aqi = get_live_data(city)
 
-        prediction = model.predict([[temp, humidity, aqi, 0, 0]])
-        risk = prediction[0]
-        advice = get_precautions(risk)
+    risk = model.predict([[temp, humidity, aqi, 0, 0]])[0]
+    advice = get_precautions(risk)
 
-        area, reason = get_urban_risk(temp, humidity, aqi, 0, 0, "Skin Disease")
+    save_prediction(city, temp, humidity, aqi, 0, 0, risk, "Skin Disease")
 
-        return render_template("result.html",
-                               city=city,
-                               temp=temp,
-                               humidity=humidity,
-                               aqi=aqi,
-                               rain=0,
-                               pop=0,
-                               prediction=risk,
-                               advice=advice,
-                               category="Skin Disease",
-                               area=area,
-                               reason=reason)
+    area, reason = get_urban_risk(temp, humidity, aqi, 0, 0, "Skin Disease")
 
-    return render_template("skin.html")
+    return render_template("result.html", city=city, temp=temp, humidity=humidity,
+                           aqi=aqi, rain=0, pop=0, prediction=risk,
+                           advice=advice, category="Skin Disease",
+                           area=area, reason=reason)
 
-# ---------------- WATER ----------------
-@app.route('/predict/water', methods=['GET','POST'])
+@app.route('/predict/water', methods=['POST'])
 def predict_water():
-    if request.method == 'POST':
+    city = request.form['city']
+    temp, humidity, aqi = get_live_data(city)
 
-        city = request.form['city']
-        temp, humidity, aqi = get_live_data(city)
+    rain = 10
+    pop = 1000
 
-        # Water diseases depend more on rain + population
-        rain = 10   # you can keep fixed OR take input later
-        pop = 1000
+    risk = model.predict([[temp, humidity, aqi, rain, pop]])[0]
+    advice = get_precautions(risk)
 
-        prediction = model.predict([[temp, humidity, aqi, rain, pop]])
-        risk = prediction[0]
-        advice = get_precautions(risk)
+    save_prediction(city, temp, humidity, aqi, rain, pop, risk, "Water-Borne Disease")
 
-        area, reason = get_urban_risk(temp, humidity, aqi, rain, pop, "Water-Borne Disease")
+    area, reason = get_urban_risk(temp, humidity, aqi, rain, pop, "Water-Borne Disease")
 
-        return render_template("result.html",
-                               city=city,
-                               temp=temp,
-                               humidity=humidity,
-                               aqi=aqi,
-                               rain=rain,
-                               pop=pop,
-                               prediction=risk,
-                               advice=advice,
-                               category="Water-Borne Disease",
-                               area=area,
-                               reason=reason)
+    return render_template("result.html",
+                           city=city,
+                           temp=temp,
+                           humidity=humidity,
+                           aqi=aqi,
+                           rain=rain,
+                           pop=pop,
+                           prediction=risk,
+                           advice=advice,
+                           category="Water-Borne Disease",
+                           area=area,
+                           reason=reason)
 
-    return render_template("water.html")
-
-# ---------------- AIR ----------------
-@app.route('/predict/air', methods=['GET','POST'])
+@app.route('/predict/air', methods=['POST'])
 def predict_air():
-    if request.method == 'POST':
+    city = request.form['city']
+    temp, humidity, aqi = get_live_data(city)
 
-        city = request.form['city']
-        temp, humidity, aqi = get_live_data(city)
+    rain, pop = 0, 0
 
-        prediction = model.predict([[temp, humidity, aqi, 0, 0]])
-        risk = prediction[0]
-        advice = get_precautions(risk)
+    risk = model.predict([[temp, humidity, aqi, rain, pop]])[0]
+    advice = get_precautions(risk)
 
-        area, reason = get_urban_risk(temp, humidity, aqi, 0, 0, "Air Borne Disease")
+    save_prediction(city, temp, humidity, aqi, rain, pop, risk, "Air-Borne Disease")
 
-        return render_template("result.html",
-                               city=city,
-                               temp=temp,
-                               humidity=humidity,
-                               aqi=aqi,
-                               rain=0,
-                               pop=0,
-                               prediction=risk,
-                               advice=advice,
-                               category="Air-Borne Disease",
-                               area=area,
-                               reason=reason)
+    area, reason = get_urban_risk(temp, humidity, aqi, rain, pop, "Air-Borne Disease")
 
-    return render_template("air.html")
+    return render_template("result.html",
+                           city=city,
+                           temp=temp,
+                           humidity=humidity,
+                           aqi=aqi,
+                           rain=rain,
+                           pop=pop,
+                           prediction=risk,
+                           advice=advice,
+                           category="Air-Borne Disease",
+                           area=area,
+                           reason=reason)
 
-# -------- INSECT DISEASE --------
-@app.route('/predict/insect', methods=['GET','POST'])
+@app.route('/predict/insect', methods=['POST'])
 def predict_insect():
-    if request.method == 'POST':
+    city = request.form['city']
+    temp, humidity, aqi = get_live_data(city)
 
-        city = request.form['city']
-        temp, humidity, aqi = get_live_data(city)
+    rain = 5
+    pop = 0
 
-        # Insect diseases depend on temp + humidity + rain
-        rain = 5
+    risk = model.predict([[temp, humidity, aqi, rain, pop]])[0]
+    advice = get_precautions(risk)
 
-        prediction = model.predict([[temp, humidity, aqi, rain, 0]])
-        risk = prediction[0]
-        advice = get_precautions(risk)
+    save_prediction(city, temp, humidity, aqi, rain, pop, risk, "Insect-Borne Disease")
 
-        area, reason = get_urban_risk(temp, humidity, aqi, rain, 0, "Skin-Borne Disease")
+    area, reason = get_urban_risk(temp, humidity, aqi, rain, pop, "Insect-Borne Disease")
 
-        return render_template("result.html",
-                               city=city,
-                               temp=temp,
-                               humidity=humidity,
-                               aqi=aqi,
-                               rain=rain,
-                               pop=0,
-                               prediction=risk,
-                               advice=advice,
-                               category="Insect-Borne Disease",
-                               area=area,
-                               reason=reason)
+    return render_template("result.html",
+                           city=city,
+                           temp=temp,
+                           humidity=humidity,
+                           aqi=aqi,
+                           rain=rain,
+                           pop=pop,
+                           prediction=risk,
+                           advice=advice,
+                           category="Insect-Borne Disease",
+                           area=area,
+                           reason=reason)
 
-    return render_template("insect.html")
 # ---------------- HISTORY ----------------
 @app.route('/history')
 def history():
+    conn = get_db()
+    cursor = conn.cursor()
+
     cursor.execute("SELECT * FROM predictions")
-    rows = cursor.fetchall()
-    return render_template("history.html", rows=rows)
+    data = cursor.fetchall()
+
+    conn.close()
+    return render_template("history.html", data=data)
 
 # ---------------- DASHBOARD ----------------
 @app.route('/dashboard')
 def dashboard():
-    cursor.execute("SELECT risk, COUNT(*) FROM predictions GROUP BY risk")
-    data = cursor.fetchall()
+    conn = get_db()
+    cursor = conn.cursor()
 
-    labels = [row[0] for row in data]
-    values = [row[1] for row in data]
+    cursor.execute("SELECT risk, COUNT(*) FROM predictions GROUP BY risk")
+    result = cursor.fetchall()
+
+    conn.close()
+
+    labels = [row[0] for row in result]
+    values = [row[1] for row in result]
 
     return render_template("dashboard.html", labels=labels, values=values)
 
@@ -372,12 +331,12 @@ def chatbot():
 
     responses = {
         "dengue": "Dengue is spread by mosquitoes.",
-        "malaria": "Malaria spreads through infected mosquito bites.",
-        "symptoms": "Common symptoms include fever, headache and nausea.",
-        "prevention": "Keep surroundings clean and avoid stagnant water."
+        "malaria": "Malaria spreads through mosquito bites.",
+        "symptoms": "Fever, headache, nausea.",
+        "prevention": "Keep surroundings clean."
     }
 
-    reply = "I can help with health-related questions."
+    reply = "I can help with health queries."
 
     for key in responses:
         if key in message:

@@ -1,42 +1,83 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
 <title>Prediction History</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<style>
+body {
+    font-family: Arial;
+    background: #f4f6f9;
+    text-align: center;
+}
+
+.container {
+    width: 80%;
+    margin: 40px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background: #2c3e50;
+    color: white;
+}
+
+tr:hover {
+    background: #f1f1f1;
+}
+</style>
 
 </head>
 
 <body>
 
-<h2>Previous Predictions</h2>
+<div class="container">
 
-<table border="1">
+<h2>Prediction History</h2>
 
+<table>
 <tr>
+<th>City</th>
 <th>Temperature</th>
 <th>Humidity</th>
 <th>AQI</th>
 <th>Rainfall</th>
 <th>Population</th>
 <th>Risk</th>
+<th>Category</th>
 </tr>
 
-{% for row in rows %}
-
+{% for row in data %}
 <tr>
-<td>{{row[0]}}</td>
-<td>{{row[1]}}</td>
+<td>{{row[1]}}</td>  <!-- city -->
 <td>{{row[2]}}</td>
 <td>{{row[3]}}</td>
 <td>{{row[4]}}</td>
 <td>{{row[5]}}</td>
+<td>{{row[6]}}</td>
+<td>{{row[7]}}</td>
+<td>{{row[8]}}</td>
 </tr>
-
 {% endfor %}
 
 </table>
 
-</body>
+</div>
 
+</body>
 </html>
